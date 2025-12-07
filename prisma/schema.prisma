@@ -1,0 +1,98 @@
+// ARQUIVO: prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// === USUÁRIOS (Fase 1) ===
+model User {
+  id            String    @id @default(uuid())
+  username      String    @unique
+  email         String    @unique
+  password      String
+  roleId        String
+  role          Role      @relation(fields: [roleId], references: [id])
+  isActive      Boolean   @default(true)
+  
+  fullName      String
+  socialName    String?
+  cpf           String?   @unique
+  phone         String?
+  matricula     String    @unique
+  admissionDate DateTime?
+  shift         String?
+  metadata      Json?
+
+  // Relacionamentos Help Desk
+  ticketsOpened Ticket[] @relation("OpenedTickets")
+  ticketsSolved Ticket[] @relation("SolvedTickets")
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  @@map("users")
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  isSystem    Boolean      @default(false)
+  users       User[]
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  description String
+  @@map("permissions")
+}
+
+// === HELP DESK (Fase 2) ===
+
+model Workstation {
+  id          String   @id @default(uuid())
+  name        String   // Ex: PA-01
+  
+  // Coordenadas para o Mapa (Arrastar e Soltar)
+  posX        Int      @default(0)
+  posY        Int      @default(0)
+  
+  // Status Visual: "OK" (Verde), "ERROR" (Vermelho)
+  status      String   @default("OK") 
+
+  tickets     Ticket[]
+
+  @@map("workstations")
+}
+
+model Ticket {
+  id            String      @id @default(uuid())
+  
+  title         String      // Ex: Mouse Quebrado
+  category      String      // Ex: Hardware, Software, Rede
+  description   String?
+  status        String      @default("OPEN") // OPEN, CLOSED
+  
+  // Quem abriu e quem resolveu
+  openerId      String
+  opener        User        @relation("OpenedTickets", fields: [openerId], references: [id])
+  
+  solverId      String?
+  solver        User?       @relation("SolvedTickets", fields: [solverId], references: [id])
+  
+  // Onde é o problema
+  workstationId String
+  workstation   Workstation @relation(fields: [workstationId], references: [id])
+
+  closedAt      DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("tickets")
+}

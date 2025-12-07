@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Call Center System</title>
+  <style>
+    body {
+      background-color: #1e1e2d;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-card {
+      background-color: #2b2b40;
+      padding: 40px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; color: #fff; }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background-color: #151521;
+      border: 1px solid #323248;
+      color: #fff;
+      border-radius: 5px;
+      box-sizing: border-box; /* Garante que padding não estoure a largura */
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #5653d4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    button:hover { background-color: #4542a8; }
+    .error { color: #ff4757; font-size: 0.9em; margin-top: 10px; display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <h2>🔐 Acesso Seguro</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="E-mail Corporativo" required value="admin@callcenter.com">
+      <input type="password" id="password" placeholder="Senha" required>
+      <button type="submit">ENTRAR</button>
+      <p class="error" id="msgError">Usuário ou senha inválidos</p>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msgError = document.getElementById('msgError');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Não recarrega a página
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const btn = document.querySelector('button');
+
+      btn.innerText = "Verificando...";
+      btn.disabled = true;
+      msgError.style.display = 'none';
+
+      try {
+        const response = await fetch('http://localhost:3000/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Salva o token no navegador
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          // Redireciona para o Dashboard (o arquivo index.html que criamos antes)
+          window.location.href = '/index.html'; 
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        msgError.innerText = error.message || "Erro ao conectar no servidor";
+        msgError.style.display = 'block';
+        btn.innerText = "ENTRAR";
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
