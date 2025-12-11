@@ -70,15 +70,27 @@ function editUser(user) {
 
 async function loadRoles() {
     const select = document.getElementById('new_role');
-    if(select.options.length > 1) return;
+    
+    // Se o select não existir ou já tiver opções carregadas, para aqui.
+    if (!select) return;
+    if (select.options.length > 1) return; 
+
     try {
         const res = await fetch('http://localhost:3000/roles');
         const roles = await res.json();
+        
+        // Limpa e adiciona a opção padrão
+        select.innerHTML = '<option value="">Selecione...</option>';
+        
         roles.forEach(r => {
             const opt = document.createElement('option');
-            opt.value = r.id; opt.innerText = r.name; select.appendChild(opt);
+            opt.value = r.id; 
+            opt.innerText = r.name; 
+            select.appendChild(opt);
         });
-    } catch(e){}
+    } catch(e) {
+        console.error("Erro ao carregar cargos", e);
+    }
 }
 
 // ENVIO (Cria ou Edita)

@@ -1,4 +1,4 @@
-<!-- ARQUIVO: public/index.html -->
+<!-- views/layout.ejs -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -9,45 +9,37 @@
 </head>
 <body>
 
-    <aside id="left-sidebar">
-        <div class="logo-area" onclick="showDashboard()">
-            <span id="logo-text">OPTIMUS CLONE</span>
-            <span class="toggle-btn" onclick="toggleLeft(); event.stopPropagation();" style="margin-left: 10px">☰</span>
-        </div>
-        
-        <nav>
-            <div class="menu-item" onclick="showDashboard()">📊 <span>Dashboard</span></div>
-            <div class="menu-item">📂 <span>Qualidade</span></div>
-            <div class="menu-item" onclick="showAdmin()">⚙️ <span>Administração</span></div>
-            <div class="menu-item" onclick="showHelpDesk()">🔧 <span>Help Desk</span></div>
-            
-            <div class="menu-item" onclick="logout()" style="margin-top: auto; border-top: 1px solid #333; color: #ff4757;">
-                🚪 <span>Sair</span>
-            </div>
-        </nav>
-    </aside>
+    <!-- INCLUI BARRA ESQUERDA (EJS) -->
+    <%- include('partials/sidebar') %>
 
     <main id="main-content">
         
-        <!-- DASHBOARD -->
+        <!-- ================= MÓDULO DASHBOARD ================= -->
         <div id="dashboard-view">
             <h1>Olá, <span id="userNameDisplay">...</span> 👋</h1>
             <p>Cargo: <strong id="userRoleDisplay">...</strong></p>
             <hr style="border: 1px solid #444; margin: 20px 0;">
-            <p>Selecione uma opção no menu lateral.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="background: #363650; padding: 20px; border-radius: 8px;">
+                    <h3>Agentes Logados</h3><h2>142</h2>
+                </div>
+                <div style="background: #363650; padding: 20px; border-radius: 8px;">
+                    <h3>Nível de Serviço</h3><h2 style="color: #4cd137;">87%</h2>
+                </div>
+            </div>
         </div>
 
-        <!-- ADMINISTRAÇÃO -->
+        <!-- ================= MÓDULO ADMIN ================= -->
         <div id="admin-view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>Gestão de Usuários</h2>
                 <button onclick="toggleUserForm()" style="padding: 10px 20px; background: #5653d4; color: white; border: none; cursor: pointer; border-radius: 5px;">+ Novo Usuário</button>
             </div>
 
-            <!-- FORMULÁRIO -->
+            <!-- FORMULÁRIO DE USUÁRIO -->
             <div id="user-form-card" style="background: #2b2b40; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid #5653d4;">
                 <h3 id="formTitle">Novo Cadastro</h3>
-                
                 <div class="tabs">
                     <button type="button" class="tab-btn active" onclick="openTab('tab-acesso')">1. Acesso</button>
                     <button type="button" class="tab-btn" onclick="openTab('tab-pessoal')">2. Pessoal</button>
@@ -55,11 +47,11 @@
                 </div>
 
                 <form id="createUserForm">
-                    <input type="hidden" id="user_id"> <!-- ID OCULTO PARA EDIÇÃO -->
-
+                    <input type="hidden" id="user_id">
+                    
                     <div id="tab-acesso" class="tab-content active" style="grid-template-columns: 1fr 1fr; gap: 15px;">
                         <input type="email" id="new_email" placeholder="E-mail" required>
-                        <input type="password" id="new_password" placeholder="Senha (Deixe em branco para manter)">
+                        <input type="password" id="new_password" placeholder="Senha">
                         <select id="new_role" required><option value="">Carregando...</option></select>
                     </div>
 
@@ -77,7 +69,6 @@
                             <option value="Tarde">Tarde</option>
                             <option value="Noite">Noite</option>
                             <option value="Madrugada">Madrugada</option>
-                            <option value="Administrativo">Administrativo</option>
                         </select>
                     </div>
 
@@ -88,7 +79,6 @@
                 </form>
             </div>
 
-            <!-- TABELA -->
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid #444;">
@@ -102,25 +92,26 @@
             </table>
         </div>
 
-        <!-- ========================================= -->
-        <!-- MÓDULO 3: HELP DESK (MAPA & LISTA)        -->
-        <!-- ========================================= -->
+        <!-- ================= MÓDULO HELP DESK ================= -->
         <div id="helpdesk-view" style="display: none; height: 100%;">
             <div class="map-toolbar">
-                <button onclick="toggleHelpDeskView('map')" style="background:#5653d4; color:white; border:none; padding:8px 15px; border-radius:4px;">🗺️ Mapa Visual</button>
+                <button onclick="toggleHelpDeskView('map')" style="background:#5653d4; color:white; border:none; padding:8px 15px; border-radius:4px;">🗺️ Mapa</button>
                 <button onclick="toggleHelpDeskView('list')" style="background:#333; color:white; border:1px solid #555; padding:8px 15px; border-radius:4px;">📋 Lista TI</button>
                 <div style="flex:1"></div>
-                <button onclick="addWorkstation()" style="background:#4cd137; color:black; border:none; padding:8px 15px; border-radius:4px; font-weight:bold;">+ Add Mesa</button>
-            </div>
-
-            <!-- VISÃO 1: MAPA -->
-            <div id="map-view" class="helpdesk-container">
-                <div id="map-canvas" class="map-canvas">
-                    <!-- As caixinhas (workstations) serão geradas aqui pelo JS -->
+                
+                <div class="edit-switch">
+                    <div id="lock-status" class="status-indicator"></div>
+                    <span class="switch-label" id="lock-label">Modo Uso (Bloqueado)</span>
+                    <button onclick="toggleEditMode()" style="background:transparent; border:none; color:white; cursor:pointer;">🔓/🔒</button>
                 </div>
+                <div style="width: 10px;"></div>
+                <button onclick="addWorkstation()" id="btn-add-ws" style="display:none; background:#4cd137; color:black; border:none; padding:8px 15px; border-radius:4px; font-weight:bold;">+ Add Mesa</button>
             </div>
 
-            <!-- VISÃO 2: LISTA -->
+            <div id="map-view" class="helpdesk-container">
+                <div id="map-canvas" class="map-canvas"></div>
+            </div>
+
             <div id="list-view" class="ticket-list-view">
                 <h2>Fila de Atendimento</h2>
                 <table style="width: 100%; text-align: left; border-collapse: collapse;">
@@ -138,10 +129,64 @@
             </div>
         </div>
 
+
+    <!-- MÓDULO WFM (SEGMENTADO) -->
+    <%- include('partials/wfm') %>
+
     </main>
 
+    <!-- INCLUI BARRA DIREITA (EJS) -->
+    <%- include('partials/rightbar') %>
+
+    <!-- ================= MODAIS (FICAM NO FINAL) ================= -->
+    
+    <!-- MODAL DE CHAMADO -->
+    <div id="ticket-modal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span id="modal-title">PA-01</span>
+                <span onclick="closeModal()" style="cursor:pointer;">X</span>
+            </div>
+            <div class="tabs" style="padding: 0 20px; margin-top: 10px;">
+                <button class="tab-btn active" onclick="openModalTab('tab-new-ticket')">Novo Chamado</button>
+                <button class="tab-btn" onclick="openModalTab('tab-history')">Histórico</button>
+            </div>
+            <div class="modal-body">
+                <div id="tab-new-ticket" class="tab-content active" style="display:block;">
+                    <textarea id="ticket-desc" rows="4" style="width:100%; background:#151521; color:white; border:1px solid #444; padding:10px;" placeholder="Descreva o problema..."></textarea>
+                    <button onclick="submitTicket()" style="width:100%; margin-top:10px; padding:10px; background:#ff4757; color:white; border:none; font-weight:bold; cursor:pointer;">ABRIR CHAMADO</button>
+                </div>
+                <div id="tab-history" class="tab-content" style="display:none; max-height: 200px; overflow-y: auto;">
+                    <div id="history-list">Carregando...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE MESA -->
+    <div id="edit-ws-modal" class="modal-overlay">
+        <div class="modal-window" style="width: 350px;">
+            <div class="modal-header">
+                <span>Configurar Posição</span>
+                <span onclick="closeEditModal()" style="cursor:pointer;">X</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-ws-id">
+                <label style="color:#aaa; font-size:0.9em;">Identificação da Mesa:</label>
+                <input type="text" id="edit-ws-name" style="margin-top: 5px; font-weight: bold;">
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-direction: column;">
+                    <button onclick="saveWorkstationName()" style="padding: 10px; background: #4cd137; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">💾 Salvar Alterações</button>
+                    <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 5px 0;">
+                    <button onclick="deleteWorkstation()" style="padding: 10px; background: #ff4757; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️ Excluir esta Mesa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/helpdesk.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/helpdesk.js"></script>
+    <script src="js/wfm.js"></script>
 </body>
 </html>

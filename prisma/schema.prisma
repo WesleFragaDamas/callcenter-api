@@ -96,3 +96,84 @@ model Ticket {
 
   @@map("tickets")
 }
+// =========================================================
+// MÓDULO 3: WFM / DIMENSIONAMENTO
+// =========================================================
+
+// 1. Curvas de Distribuição (Ex: Padrão Segunda, Padrão Feriado)
+model DistributionCurve {
+  id          String   @id @default(uuid())
+  name        String   // Ex: "Segunda-feira Voz"
+  channel     String   // VOICE_IN, VOICE_OUT, WHATSAPP
+  
+  // Array de objetos: [{time: "08:00", percent: 0.05}, ...]
+  intervals   Json     
+  
+  simulations Simulation[]
+
+  @@map("distribution_curves")
+}
+
+// Adicione no final do schema, junto com o WFM
+
+model ShrinkageProfile {
+  id          String   @id @default(uuid())
+  name        String   // Ex: "Cenário Padrão"
+  
+  // JSON para guardar campos dinâmicos: 
+  // [{"label": "Faltas", "percent": 5}, {"label": "Férias", "percent": 8.5}]
+  items       Json     
+  
+  simulations Simulation[]
+
+  @@map("shrinkage_profiles")
+}
+
+// 2. O Cabeçalho da Simulação
+model Simulation {
+  id          String   @id @default(uuid())
+  description String   // Ex: "Dimensionamento Black Friday"
+  channel     String   // VOICE, CHAT...
+  dateReference DateTime? // Opcional
+  
+  // Parâmetros Gerais
+  totalVolume Int      // Ex: 10.000 chamadas
+  aht         Int      // TMA (segundos)
+  slaTarget   Float    // Meta (ex: 80%)
+  slaTime     Int      // Tempo Meta (ex: 20s)
+  
+  // Qual curva usou para distribuir?
+  curveId     String
+  curve       DistributionCurve @relation(fields: [curveId], references: [id])
+
+  shrinkageId String? // Opcional (se for null, considera 0%)
+  shrinkage   ShrinkageProfile? @relation(fields: [shrinkageId], references: [id])
+
+  // Os dados linha a linha (Intra-hora)
+  items       SimulationItem[]
+
+  createdAt   DateTime @default(now())
+  @@map("simulations")
+}
+
+// 3. Os Itens da Simulação (A "Tabela Excel")
+model SimulationItem {
+  id             String     @id @default(uuid())
+  simulationId   String
+  simulation     Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  
+  interval       String     // "08:00", "08:30"...
+  
+  // Dados Calculados (Base)
+  volume         Int        // Quantas ligações nesse horário
+  requiredAgents Int        // Quantos a Erlang disse que precisa
+  
+  // Dados Editáveis (Onde você mexe)
+  scheduledAgents Int       // Quantos você realmente vai colocar (EDITÁVEL)
+  
+  // Resultados (Calculados em tempo real)
+  projectedSLA   Float      // Qual SLA vai dar com os agentes escalados
+  occupancy      Float?     // Ocupação prevista
+
+  @@map("simulation_items")
+}

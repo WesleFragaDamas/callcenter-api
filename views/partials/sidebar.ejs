@@ -1,0 +1,24 @@
+<!-- views/partials/sidebar.ejs -->
+<aside id="left-sidebar">
+    <div class="logo-area" onclick="showDashboard()">
+        <span id="logo-text">OPTIMUS CLONE</span>
+        <span class="toggle-btn" onclick="toggleLeft(); event.stopPropagation();" style="margin-left: 10px">☰</span>
+    </div>
+    
+    <nav>
+        <div class="menu-item" onclick="showDashboard()">📊 <span>Dashboard</span></div>
+        
+        <div class="menu-item has-submenu" onclick="toggleSubmenu('submenu-helpdesk')">🔧 <span>Help Desk</span></div>
+        <div id="submenu-helpdesk" class="submenu">
+            <div class="menu-item" onclick="showHelpDesk('map')">🗺️ Mapa Visual</div>
+            <div class="menu-item" onclick="showHelpDesk('list')">📋 Fila de Chamados</div>
+        </div>
+        
+        <div class="menu-item" onclick="showWfm()">📈 <span>Dimensionamento</span></div>
+        <div class="menu-item" onclick="showAdmin()">⚙️ <span>Administração</span></div>
+        
+        <div class="menu-item" onclick="logout()" style="margin-top: auto; border-top: 1px solid #333; color: #ff4757;">
+            🚪 <span>Sair</span>
+        </div>
+    </nav>
+</aside>

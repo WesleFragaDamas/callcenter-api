@@ -31,12 +31,14 @@ function toggleRight() {
     sidebar.classList.toggle('collapsed');
 }
 
-// --- 3. NAVEGAÇÃO ENTRE TELAS (ROTEADOR SIMPLES) ---
-// Esconde tudo e mostra só o que queremos
+// --- NAVEGAÇÃO ENTRE TELAS ---
 function hideAllViews() {
-    document.getElementById('dashboard-view').style.display = 'none';
-    document.getElementById('admin-view').style.display = 'none';
-    // Aqui adicionaremos as próximas telas: helpdesk-view, wfm-view...
+    // Lista de IDs de todas as views possíveis
+    const views = ['dashboard-view', 'admin-view', 'helpdesk-view'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
 }
 
 function showDashboard() {
@@ -48,17 +50,41 @@ function showAdmin() {
     hideAllViews();
     document.getElementById('admin-view').style.display = 'block';
     
-    // Chama as funções do admin.js se elas existirem
-    if (typeof loadUsers === 'function') {
-        loadUsers();
-        loadRoles();
+    // Carrega a lista de usuários
+    if (typeof loadUsers === 'function') loadUsers();
+    
+    // CORREÇÃO: Carrega a lista de cargos também!
+    if (typeof loadRoles === 'function') loadRoles();
+}
+
+function showHelpDesk(subView = 'map') {
+    hideAllViews();
+    document.getElementById('helpdesk-view').style.display = 'block';
+    
+    // CORREÇÃO: Apenas chamamos o toggle. Ele já cuida de carregar os dados.
+    if (subView === 'map') {
+        toggleHelpDeskView('map');
+    } else {
+        toggleHelpDeskView('list');
     }
 }
 
-// Adicione essa função no public/js/app.js
-function showHelpDesk() {
+// --- SUBMENUS ---
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    if (submenu.classList.contains('open')) {
+        submenu.classList.remove('open');
+    } else {
+        // Fecha outros submenus se houver
+        document.querySelectorAll('.submenu').forEach(s => s.classList.remove('open'));
+        submenu.classList.add('open');
+    }
+}
+// public/js/app.js - Atualize a função showWfm
+function showWfm() {
     hideAllViews();
-    document.getElementById('helpdesk-view').style.display = 'block';
-    // Carrega o mapa por padrão
-    toggleHelpDeskView('map');
+    document.getElementById('wfm-view').style.display = 'block';
+    
+    // Carrega a lista de curvas ao entrar
+    if (typeof loadCurvesList === 'function') loadCurvesList();
 }
